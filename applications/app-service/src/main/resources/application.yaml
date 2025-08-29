@@ -1,0 +1,34 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: "ScaffoldQuickStart"
+  devtools:
+    add-properties: false
+  h2:
+    console:
+      enabled: true
+      path: "/h2"
+  profiles:
+    include: null
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,prometheus"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+cors:
+  allowed-origins: "http://localhost:4200,http://localhost:8080"
+adapters.r2dbc:
+  host: localhost
+  port: 5432
+  database: crediyadb
+  schema: public
+  username: postgres
+  password: postgres
+jwt:
+  secret: u1FZ7xZkdlp7uPqFz3ME7J8Qz3YOXkU0jU6aWw+4/9uQ4dFw6Nw5Y8JtdfG2L/zzU7fNHbZx4fM=
+  expiration: 3600
