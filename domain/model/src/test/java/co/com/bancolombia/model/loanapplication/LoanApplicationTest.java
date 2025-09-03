@@ -8,7 +8,7 @@ import java.math.BigInteger;
 
 import org.junit.jupiter.api.Test;
 
-public class LoanApplicationTest {
+class LoanApplicationTest {
 
     @Test
     void testNoArgsConstructorAndSetters() {
@@ -37,7 +37,8 @@ public class LoanApplicationTest {
                 BigInteger.valueOf(202),
                 BigDecimal.valueOf(5000),
                 12,
-                "APPROVED"
+                "APPROVED",
+                BigDecimal.valueOf(0)
         );
 
         assertEquals(BigInteger.TEN, loanApplication.getId());

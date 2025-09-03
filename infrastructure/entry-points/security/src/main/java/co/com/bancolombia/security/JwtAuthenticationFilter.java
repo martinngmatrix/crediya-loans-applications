@@ -11,7 +11,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 
-import co.com.bancolombia.model.user.gateways.JwtService;
+import co.com.bancolombia.utils.JwtService;
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter implements WebFilter {

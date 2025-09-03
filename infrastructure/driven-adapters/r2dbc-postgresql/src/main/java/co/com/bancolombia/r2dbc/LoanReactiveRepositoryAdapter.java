@@ -33,4 +33,9 @@ public class LoanReactiveRepositoryAdapter extends ReactiveAdapterOperations<
         return repository.findByName(name).map(this::toEntity);
     }
 
+    @Override
+    public Mono<Loan> findById(BigInteger id) {
+        return repository.findById(id).map(this::toEntity);
+    }
+
 }

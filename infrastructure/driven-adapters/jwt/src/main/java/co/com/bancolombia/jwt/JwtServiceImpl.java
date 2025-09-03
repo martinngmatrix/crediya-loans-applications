@@ -5,7 +5,7 @@ import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
 
 import co.com.bancolombia.model.user.User;
-import co.com.bancolombia.model.user.gateways.JwtService;
+import co.com.bancolombia.utils.JwtService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 

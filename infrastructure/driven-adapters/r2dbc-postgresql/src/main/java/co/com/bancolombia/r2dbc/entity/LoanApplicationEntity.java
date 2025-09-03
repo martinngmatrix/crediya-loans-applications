@@ -36,4 +36,7 @@ public class LoanApplicationEntity {
 
     @Column("status")
     private String status;
+
+    @Column("interest_rate")
+    private BigDecimal interestRate;
 }

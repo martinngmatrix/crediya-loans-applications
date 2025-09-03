@@ -14,7 +14,7 @@ import co.com.bancolombia.model.loans.Loan;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-public class LoanRepositoryTest {
+class LoanRepositoryTest {
 
     private LoanRepository loanRepository;
 
@@ -51,5 +51,35 @@ public class LoanRepositoryTest {
                 .verifyComplete();
 
         verify(loanRepository, times(1)).findByName("Unknown");
+    }
+
+    @Test
+    void testFindByIdReturnsLoan() {
+        Loan loan = Loan.builder()
+                .id(BigInteger.ONE)
+                .name("Personal Loan")
+                .build();
+
+        when(loanRepository.findById(BigInteger.valueOf(1)))
+                .thenReturn(Mono.just(loan));
+
+        StepVerifier.create(loanRepository.findById(BigInteger.valueOf(1)))
+                .expectNextMatches(result ->
+                        result.getId().equals(BigInteger.ONE)
+                                && result.getName().equals("Personal Loan"))
+                .verifyComplete();
+
+        verify(loanRepository, times(1)).findById(BigInteger.valueOf(1));
+    }
+
+    @Test
+    void testFindByIdReturnsEmpty() {
+        when(loanRepository.findById(BigInteger.valueOf(1)))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(loanRepository.findById(BigInteger.valueOf(1)))
+                .verifyComplete();
+
+        verify(loanRepository, times(1)).findById(BigInteger.valueOf(1));
     }
 }

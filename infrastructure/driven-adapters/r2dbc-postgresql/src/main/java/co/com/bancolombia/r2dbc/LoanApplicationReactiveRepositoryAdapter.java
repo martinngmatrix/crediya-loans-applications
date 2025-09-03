@@ -9,6 +9,7 @@ import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.r2dbc.entity.LoanApplicationEntity;
 import co.com.bancolombia.r2dbc.helper.ReactiveAdapterOperations;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Repository
@@ -33,5 +34,11 @@ public class LoanApplicationReactiveRepositoryAdapter extends ReactiveAdapterOpe
     @Override
     public Mono<Void> createLoanApplication(LoanApplication loanApplication, String documentNumber, String loanType) {
         return repository.save(toData(loanApplication)).then();
+    }
+
+    @Override
+    public Flux<LoanApplication> getLoansApplicationsWithPagination(String status, int size, int page) {
+        int offset = (page - 1) * size;
+        return repository.findByStatusWithPagination(status, size, offset).map(this::toEntity);
     } 
 }

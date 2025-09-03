@@ -21,4 +21,5 @@ public class LoanApplication {
     private BigDecimal amount;
     private Integer term;
     private String status;
+    private BigDecimal interestRate;
 }

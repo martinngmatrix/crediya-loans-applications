@@ -4,9 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
-public class ConstantsTest {
+class ConstantsTest {
 
     @Test
     void shouldHaveCorrectPendingReviewMessage() {
@@ -14,8 +16,15 @@ public class ConstantsTest {
     }
 
     @Test
+    void shouldHaveCorrectLoanTypesToReviewMessage() {
+        assertEquals(List.of("Pendiente de revisión", "Rechazado", "Revision manual"), Constants.LOAN_TYPES_TO_REVIEW);
+    }
+
+    @Test
     void constantShouldNotBeNullOrEmpty() {
         assertNotNull(Constants.PENDING_REVIEW);
+        assertNotNull(Constants.LOAN_TYPES_TO_REVIEW);
         assertFalse(Constants.PENDING_REVIEW.isEmpty());
+        assertFalse(Constants.LOAN_TYPES_TO_REVIEW.isEmpty());
     }
 }

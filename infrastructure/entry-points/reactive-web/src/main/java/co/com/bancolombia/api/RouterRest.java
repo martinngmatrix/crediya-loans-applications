@@ -7,6 +7,7 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
+import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 import org.springdoc.core.annotations.RouterOperation;
@@ -42,8 +43,37 @@ public class RouterRest {
                     )),
                 }
         )),
+        @RouterOperation(
+            path = "/api/v1/solicitud",
+            beanClass = Handler.class,
+            beanMethod = "listLoanApplication",
+            method = RequestMethod.GET,
+            operation = @Operation(
+                operationId = "listLoanApplication",
+                tags = {"LoanApplication"},
+                summary = "List loans applications",
+                description = "List loans applications in the system",
+                responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "User created successfully",
+                    content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    array = @io.swagger.v3.oas.annotations.media.ArraySchema(
+                        schema = @io.swagger.v3.oas.annotations.media.Schema(
+                            implementation = co.com.bancolombia.api.dto.ListLoanApplicationDTO.class
+                        )
+                    )
+                    )),
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid input data", content = @io.swagger.v3.oas.annotations.media.Content(
+                        mediaType = "application/json",
+                        schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = co.com.bancolombia.api.dto.ErrorResponse.class)
+                    )),
+                }
+        ))
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
-        return route(POST("/api/v1/solicitud"), handler::createLoanApplication);
+        return route(POST("/api/v1/solicitud"), handler::createLoanApplication)
+            .andRoute(GET("/api/v1/solicitud"), handler::listLoanApplication);
     }
 }

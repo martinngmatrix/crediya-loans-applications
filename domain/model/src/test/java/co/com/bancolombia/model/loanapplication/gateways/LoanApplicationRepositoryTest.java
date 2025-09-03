@@ -12,10 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import co.com.bancolombia.model.loanapplication.LoanApplication;
+import co.com.bancolombia.model.loanapplication.constants.Constants;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-public class LoanApplicationRepositoryTest {
+class LoanApplicationRepositoryTest {
 
     @Test
     void testCreateLoanApplication() {
@@ -42,5 +44,37 @@ public class LoanApplicationRepositoryTest {
                 .verifyComplete();
 
         verify(repository, times(1)).createLoanApplication(loanApplication, documentNumber, loanType);
+    }
+
+    @Test
+    void testGetLoansApplicationsWithResults() {
+        LoanApplicationRepository repository = Mockito.mock(LoanApplicationRepository.class);
+
+        LoanApplication app1 = LoanApplication.builder()
+                .id(BigInteger.ONE)
+                .userId(BigInteger.valueOf(100))
+                .loanId(BigInteger.valueOf(200))
+                .amount(BigDecimal.valueOf(10000))
+                .term(12)
+                .status("PENDING")
+                .build();
+
+        LoanApplication app2 = LoanApplication.builder()
+                .id(BigInteger.TWO)
+                .userId(BigInteger.valueOf(101))
+                .loanId(BigInteger.valueOf(201))
+                .amount(BigDecimal.valueOf(20000))
+                .term(36)
+                .status("APPROVED")
+                .build();
+
+        when(repository.getLoansApplicationsWithPagination(Constants.PENDING_REVIEW,1,1)).thenReturn(Flux.just(app1, app2));
+
+        StepVerifier.create(repository.getLoansApplicationsWithPagination(Constants.PENDING_REVIEW,1,1))
+                .expectNext(app1)
+                .expectNext(app2)
+                .verifyComplete();
+
+        verify(repository, times(1)).getLoansApplicationsWithPagination(Constants.PENDING_REVIEW,1,1);
     }
 }

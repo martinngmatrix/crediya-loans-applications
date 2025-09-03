@@ -12,18 +12,32 @@ import reactor.core.publisher.Mono;
 
 public class RoleAuthorizationFilter implements WebFilter {
 
-    private final Map<String, List<String>> routeRoles = Map.of(
-            "/api/v1/solicitud", List.of("cliente")
+    private final Map<String, Map<String, List<String>>> routeRoles = Map.of(
+        "/api/v1/solicitud", Map.of(
+            "GET", List.of("admin", "asesor"),
+            "POST", List.of("cliente")
+        )
     );
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
+        String method = exchange.getRequest().getMethod() != null
+                ? exchange.getRequest().getMethod().name()
+                : "";
         String role = (String) exchange.getAttribute("role");
 
-        for (Map.Entry<String, List<String>> entry : routeRoles.entrySet()) {
-            if (path.startsWith(entry.getKey())) {
-                if (role == null || !entry.getValue().contains(role)) {
+        for (Map.Entry<String, Map<String, List<String>>> routeEntry : routeRoles.entrySet()) {
+            if (path.startsWith(routeEntry.getKey())) {
+                Map<String, List<String>> methodRoles = routeEntry.getValue();
+                List<String> allowedRoles = methodRoles.get(method);
+
+                if (allowedRoles == null || allowedRoles.isEmpty()) {
+                    exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+                    return exchange.getResponse().setComplete();
+                }
+
+                if (role == null || !allowedRoles.contains(role)) {
                     exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
                     return exchange.getResponse().setComplete();
                 }

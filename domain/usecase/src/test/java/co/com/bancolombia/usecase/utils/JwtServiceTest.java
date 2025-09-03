@@ -1,4 +1,4 @@
-package co.com.bancolombia.model.user.gateway;
+package co.com.bancolombia.usecase.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.Test;
 
 import co.com.bancolombia.model.user.User;
-import co.com.bancolombia.model.user.gateways.JwtService;
+import co.com.bancolombia.utils.JwtService;
 
 public class JwtServiceTest {
 

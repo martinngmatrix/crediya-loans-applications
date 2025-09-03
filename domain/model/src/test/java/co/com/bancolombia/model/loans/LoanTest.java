@@ -6,7 +6,7 @@ import java.math.BigInteger;
 
 import org.junit.jupiter.api.Test;
 
-public class LoanTest {
+class LoanTest {
 
     @Test
     void testNoArgsConstructorAndSetters() {

@@ -9,7 +9,7 @@ import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 
-public class UserTest {
+class UserTest {
     @Test
     void testNoArgsConstructorAndSetters() {
         User user = new User();

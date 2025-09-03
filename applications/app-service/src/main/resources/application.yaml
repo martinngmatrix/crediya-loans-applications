@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 spring:
   application:
     name: "ScaffoldQuickStart"
@@ -20,15 +20,43 @@ management:
     health:
       probes:
         enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
 adapters.r2dbc:
-  host: localhost
+  host: "localhost"
   port: 5432
-  database: crediyadb
-  schema: public
-  username: postgres
-  password: postgres
+  database: "crediyadb"
+  schema: "public"
+  username: "postgres"
+  password: "postgres"
 jwt:
-  secret: u1FZ7xZkdlp7uPqFz3ME7J8Qz3YOXkU0jU6aWw+4/9uQ4dFw6Nw5Y8JtdfG2L/zzU7fNHbZx4fM=
+  secret: "u1FZ7xZkdlp7uPqFz3ME7J8Qz3YOXkU0jU6aWw+4/9uQ4dFw6Nw5Y8JtdfG2L/zzU7fNHbZx4fM="
   expiration: 3600
+adapter:
+  restconsumer:
+    timeout: 5000
+    url: "http://localhost:8080/api/v1"
+resilience4j:
+  circuitbreaker:
+    instances:
+      testGet:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: "2s"
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 10
+        waitDurationInOpenState: "10s"
+      testPost:
+        registerHealthIndicator: true
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: "2s"
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 10
+        waitDurationInOpenState: "10s"
