@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.constants.Constants;
+import co.com.bancolombia.model.loanapplication.constants.messages.LoanApplicationErrorMessages;
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.loans.Loan;
 import co.com.bancolombia.model.loans.gateways.LoanRepository;
@@ -154,15 +155,20 @@ public class LoanApplicationUseCaseTest {
                 .name(Constants.LOAN_TYPES_TO_REVIEW.get(0))
                 .build();
 
-        when(repository.getLoansApplicationsWithPagination(Constants.PENDING_REVIEW, size, page)).thenReturn(Flux.just(loanApplication));
+        when(repository.getLoansApplicationsWithPagination(Constants.PENDING_REVIEW, size, page))
+                .thenReturn(Flux.just(loanApplication));
         when(userRepository.findById(token, BigInteger.TEN)).thenReturn(Mono.just(user));
         when(loanRepository.findById(BigInteger.valueOf(20))).thenReturn(Mono.just(loan));
 
         StepVerifier.create(useCase.listLoanApplications(token, Constants.PENDING_REVIEW, size, page))
                 .expectNextMatches(details ->
-                        details.getId().equals(BigInteger.ONE) &&
-                        details.getName().equals("John Doe") &&
-                        details.getLoanName().equals(loan.getName())
+                        details.getContent().size() == 1 &&
+                        details.getContent().get(0).getId().equals(BigInteger.ONE) &&
+                        details.getContent().get(0).getName().equals("John Doe") &&
+                        details.getContent().get(0).getLoanName().equals(loan.getName()) &&
+                        details.getPage() == page &&
+                        details.getSize() == 1 &&
+                        details.isHasNext()
                 )
                 .verifyComplete();
 
@@ -172,38 +178,19 @@ public class LoanApplicationUseCaseTest {
     }
 
     @Test
-    void listLoanApplicationsFilteredOut() {
-        LoanApplication loanApplication = new LoanApplication();
-        loanApplication.setId(BigInteger.ONE);
-        loanApplication.setUserId(BigInteger.TEN);
-        loanApplication.setLoanId(BigInteger.valueOf(20));
-        loanApplication.setAmount(BigDecimal.valueOf(10000.0));
-        loanApplication.setTerm(12);
-        loanApplication.setStatus("TipoNoRevisable");
+        void listLoanApplicationsFilteredOut() {
+        StepVerifier.create(useCase.listLoanApplications(token, "TipoNoRevisable", size, page))
+                .expectErrorMatches(err -> err instanceof RuntimeException &&
+                        err.getMessage().equals(LoanApplicationErrorMessages.INVALID_STATUS))
+                .verify();
 
-        User user = User.builder()
-                .id(BigInteger.TEN)
-                .email("test@email.com")
-                .name("John Doe")
-                .baseSalary(BigDecimal.valueOf(2000.0))
-                .build();
-
-        Loan loan = Loan.builder()
-                .id(BigInteger.valueOf(20))
-                .name("TipoNoRevisable")
-                .build();
-
-        when(repository.getLoansApplicationsWithPagination(Constants.PENDING_REVIEW, size, page)).thenReturn(Flux.empty());
-        when(userRepository.findById(token, BigInteger.TEN)).thenReturn(Mono.just(user));
-        when(loanRepository.findById(BigInteger.valueOf(20))).thenReturn(Mono.just(loan));
-
-        StepVerifier.create(useCase.listLoanApplications(token, Constants.PENDING_REVIEW, size, page))
-                .verifyComplete();
+        verifyNoInteractions(repository);
     }
 
     @Test
     void listLoanApplicationsRepositoryError() {
-        when(repository.getLoansApplicationsWithPagination(Constants.PENDING_REVIEW, size, page)).thenReturn(Flux.error(new RuntimeException("DB error")));
+        when(repository.getLoansApplicationsWithPagination(Constants.PENDING_REVIEW, size, page))
+                .thenReturn(Flux.error(new RuntimeException("DB error")));
 
         StepVerifier.create(useCase.listLoanApplications(token, Constants.PENDING_REVIEW, size, page))
                 .expectErrorMatches(err -> err.getMessage().equals("DB error"))

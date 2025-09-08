@@ -1,0 +1,29 @@
+# Etapa 1: Build del JAR
+FROM gradle:8.14.3-jdk21 AS build
+
+WORKDIR /app
+
+# Copiar archivos de configuración de Gradle
+COPY build.gradle settings.gradle gradlew ./
+COPY gradle ./gradle
+
+# Copiar todo el código fuente
+COPY . .
+
+# Dar permisos al wrapper
+RUN chmod +x ./gradlew
+
+# Ejecutar build del bootJar sin tests y sin validar estructura
+RUN ./gradlew :app-service:bootJar -x test -x validateStructure --no-daemon
+
+# Etapa 2: Runtime
+FROM eclipse-temurin:21-jdk-jammy
+
+WORKDIR /app
+
+# Copiar el JAR generado desde la etapa build
+COPY --from=build /app/applications/app-service/build/libs/*.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java","-jar","app.jar"]

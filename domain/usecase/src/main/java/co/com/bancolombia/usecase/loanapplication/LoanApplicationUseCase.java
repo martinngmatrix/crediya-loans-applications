@@ -11,7 +11,6 @@ import co.com.bancolombia.model.loanapplicationdetails.LoanApplicationDetails;
 import co.com.bancolombia.model.loans.gateways.LoanRepository;
 import co.com.bancolombia.model.user.gateways.UserRepository;
 import lombok.RequiredArgsConstructor;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class LoanApplicationUseCase {
@@ -33,15 +32,15 @@ public class LoanApplicationUseCase {
                 );
     }
 
-    public Flux<LoanApplicationDetails> listLoanApplications(String token, String status, int size, int page) {
+    public Mono<LoanApplicationDetails> listLoanApplications(String token, String status, int size, int page) {
         if(!Constants.LOAN_TYPES_TO_REVIEW.contains(status))
-            Mono.error(new RuntimeException(LoanApplicationErrorMessages.INVALID_STATUS));
+            return Mono.error(new RuntimeException(LoanApplicationErrorMessages.INVALID_STATUS));
         return repository.getLoansApplicationsWithPagination(status, size, page)
                 .flatMap(
                     loanApp -> Mono.zip(
                         userRepository.findById(token, loanApp.getUserId()),
                         loanRepository.findById(loanApp.getLoanId()),
-                        (user, loan) ->  new LoanApplicationDetails(
+                        (user, loan) ->  new LoanApplicationDetails.Item(
                             loanApp.getId(),
                             user.getEmail(),
                             user.getName(),
@@ -54,6 +53,14 @@ public class LoanApplicationUseCase {
                             loanApp.getStatus()
                         )
                     )
+                )
+                .collectList()
+                .map(list -> LoanApplicationDetails.builder()
+                        .page(page)
+                        .size(list.size())
+                        .hasNext(list.size() == size)
+                        .content(list)
+                        .build()
                 );
     }
 }

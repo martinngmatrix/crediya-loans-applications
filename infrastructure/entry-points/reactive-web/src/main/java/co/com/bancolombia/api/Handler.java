@@ -3,6 +3,7 @@ package co.com.bancolombia.api;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -17,7 +18,6 @@ import co.com.bancolombia.api.constants.Constants;
 import co.com.bancolombia.api.constants.messages.ApiResponseMessages;
 import co.com.bancolombia.api.dto.CreateLoanApplicationDTO;
 import co.com.bancolombia.api.dto.ErrorResponse;
-import co.com.bancolombia.api.dto.ListLoanApplicationDTO;
 import co.com.bancolombia.api.mapper.LoanApplicationDTOMapper;
 import co.com.bancolombia.api.utils.JwtUtil;
 import co.com.bancolombia.api.validation.ValidationService;
@@ -63,19 +63,6 @@ private static final Logger log = LoggerFactory.getLogger(Handler.class);
         int size = serverRequest.queryParam("size").map(Integer::parseInt).orElse(0);
         String status = serverRequest.queryParam("status").orElse("");
         return loanApplicationUseCase.listLoanApplications(token, status, size, page)
-                .map(loanAppDetails -> new ListLoanApplicationDTO(
-                    loanAppDetails.getId(),
-                    loanAppDetails.getEmail(),
-                    loanAppDetails.getName(),
-                    loanAppDetails.getLoanName(),
-                    loanAppDetails.getInterestRate(),
-                    loanAppDetails.getDeudaTotalMensualSolicitudesAprobadas(),
-                    loanAppDetails.getBaseSalary(),
-                    loanAppDetails.getAmount(),
-                    loanAppDetails.getTerm(),
-                    loanAppDetails.getStatus()
-                ))
-                .collectList()
                 .flatMap(
                     list -> ServerResponse
                     .ok()

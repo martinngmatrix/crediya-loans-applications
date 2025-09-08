@@ -1,63 +1,66 @@
 package co.com.bancolombia.model.loanapplicationdetails;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 class LoanApplicationDetailsTest {
+
     @Test
-    void testAllArgsConstructorAndGetters() {
-        LoanApplicationDetails details = new LoanApplicationDetails(
+    void testItemAllArgsConstructorAndGetters() {
+        LoanApplicationDetails.Item item = new LoanApplicationDetails.Item(
                 BigInteger.ONE,
                 "test@email.com",
                 "John Doe",
                 "Personal Loan",
-                BigDecimal.valueOf(0),
-                BigDecimal.valueOf(0),
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
                 BigDecimal.valueOf(3000),
                 BigDecimal.valueOf(15000),
                 24,
                 "PENDING"
         );
 
-        assertEquals(BigInteger.ONE, details.getId());
-        assertEquals("test@email.com", details.getEmail());
-        assertEquals("John Doe", details.getName());
-        assertEquals("Personal Loan", details.getLoanName());
-        assertEquals(BigDecimal.valueOf(3000), details.getBaseSalary());
-        assertEquals(BigDecimal.valueOf(15000), details.getAmount());
-        assertEquals(24, details.getTerm());
-        assertEquals("PENDING", details.getStatus());
+        assertEquals(BigInteger.ONE, item.getId());
+        assertEquals("test@email.com", item.getEmail());
+        assertEquals("John Doe", item.getName());
+        assertEquals("Personal Loan", item.getLoanName());
+        assertEquals(BigDecimal.valueOf(3000), item.getBaseSalary());
+        assertEquals(BigDecimal.valueOf(15000), item.getAmount());
+        assertEquals(24, item.getTerm());
+        assertEquals("PENDING", item.getStatus());
     }
 
     @Test
-    void testNoArgsConstructorAndSetters() {
-        LoanApplicationDetails details = new LoanApplicationDetails();
-        details.setId(BigInteger.TEN);
-        details.setEmail("lucia@example.com");
-        details.setName("Lucia Fernandez");
-        details.setLoanName("Mortgage");
-        details.setBaseSalary(BigDecimal.valueOf(5000));
-        details.setAmount(BigDecimal.valueOf(100000));
-        details.setTerm(120);
-        details.setStatus("APPROVED");
+    void testItemNoArgsConstructorAndSetters() {
+        LoanApplicationDetails.Item item = new LoanApplicationDetails.Item();
+        item.setId(BigInteger.TEN);
+        item.setEmail("lucia@example.com");
+        item.setName("Lucia Fernandez");
+        item.setLoanName("Mortgage");
+        item.setBaseSalary(BigDecimal.valueOf(5000));
+        item.setAmount(BigDecimal.valueOf(100000));
+        item.setTerm(120);
+        item.setStatus("APPROVED");
 
-        assertEquals(BigInteger.TEN, details.getId());
-        assertEquals("lucia@example.com", details.getEmail());
-        assertEquals("Lucia Fernandez", details.getName());
-        assertEquals("Mortgage", details.getLoanName());
-        assertEquals(BigDecimal.valueOf(5000), details.getBaseSalary());
-        assertEquals(BigDecimal.valueOf(100000), details.getAmount());
-        assertEquals(120, details.getTerm());
-        assertEquals("APPROVED", details.getStatus());
+        assertEquals(BigInteger.TEN, item.getId());
+        assertEquals("lucia@example.com", item.getEmail());
+        assertEquals("Lucia Fernandez", item.getName());
+        assertEquals("Mortgage", item.getLoanName());
+        assertEquals(BigDecimal.valueOf(5000), item.getBaseSalary());
+        assertEquals(BigDecimal.valueOf(100000), item.getAmount());
+        assertEquals(120, item.getTerm());
+        assertEquals("APPROVED", item.getStatus());
     }
 
     @Test
-    void testBuilder() {
-        LoanApplicationDetails details = LoanApplicationDetails.builder()
+    void testItemBuilder() {
+        LoanApplicationDetails.Item item = LoanApplicationDetails.Item.builder()
                 .id(BigInteger.valueOf(99))
                 .email("builder@example.com")
                 .name("Builder Test")
@@ -68,19 +71,19 @@ class LoanApplicationDetailsTest {
                 .status("REJECTED")
                 .build();
 
-        assertEquals(BigInteger.valueOf(99), details.getId());
-        assertEquals("builder@example.com", details.getEmail());
-        assertEquals("Builder Test", details.getName());
-        assertEquals("Car Loan", details.getLoanName());
-        assertEquals(BigDecimal.valueOf(2500), details.getBaseSalary());
-        assertEquals(BigDecimal.valueOf(12000), details.getAmount());
-        assertEquals(36, details.getTerm());
-        assertEquals("REJECTED", details.getStatus());
+        assertEquals(BigInteger.valueOf(99), item.getId());
+        assertEquals("builder@example.com", item.getEmail());
+        assertEquals("Builder Test", item.getName());
+        assertEquals("Car Loan", item.getLoanName());
+        assertEquals(BigDecimal.valueOf(2500), item.getBaseSalary());
+        assertEquals(BigDecimal.valueOf(12000), item.getAmount());
+        assertEquals(36, item.getTerm());
+        assertEquals("REJECTED", item.getStatus());
     }
 
     @Test
-    void testToBuilder() {
-        LoanApplicationDetails original = LoanApplicationDetails.builder()
+    void testItemToBuilder() {
+        LoanApplicationDetails.Item original = LoanApplicationDetails.Item.builder()
                 .id(BigInteger.valueOf(50))
                 .email("original@example.com")
                 .name("Original Name")
@@ -91,7 +94,7 @@ class LoanApplicationDetailsTest {
                 .status("PENDING")
                 .build();
 
-        LoanApplicationDetails modified = original.toBuilder()
+        LoanApplicationDetails.Item modified = original.toBuilder()
                 .status("APPROVED")
                 .build();
 
@@ -103,5 +106,31 @@ class LoanApplicationDetailsTest {
         assertEquals(original.getAmount(), modified.getAmount());
         assertEquals(original.getTerm(), modified.getTerm());
         assertEquals("APPROVED", modified.getStatus());
+    }
+
+    @Test
+    void testLoanApplicationDetailsWithPagination() {
+        LoanApplicationDetails.Item item = LoanApplicationDetails.Item.builder()
+                .id(BigInteger.ONE)
+                .email("page@test.com")
+                .name("Page User")
+                .loanName("Home Loan")
+                .amount(BigDecimal.valueOf(50000))
+                .term(240)
+                .status("PENDING")
+                .build();
+
+        LoanApplicationDetails details = LoanApplicationDetails.builder()
+                .page(1)
+                .size(1)
+                .hasNext(false)
+                .content(List.of(item))
+                .build();
+
+        assertEquals(1, details.getPage());
+        assertEquals(1, details.getSize());
+        assertTrue(!details.isHasNext());
+        assertEquals(1, details.getContent().size());
+        assertEquals("Page User", details.getContent().get(0).getName());
     }
 }

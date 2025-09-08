@@ -61,7 +61,7 @@ public class RouterRest {
                     mediaType = "application/json",
                     array = @io.swagger.v3.oas.annotations.media.ArraySchema(
                         schema = @io.swagger.v3.oas.annotations.media.Schema(
-                            implementation = co.com.bancolombia.api.dto.ListLoanApplicationDTO.class
+                            implementation = co.com.bancolombia.api.dto.PageResponse.class
                         )
                     )
                     )),
