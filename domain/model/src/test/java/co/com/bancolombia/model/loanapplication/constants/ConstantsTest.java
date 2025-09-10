@@ -21,9 +21,16 @@ class ConstantsTest {
     }
 
     @Test
+    void shouldHaveCorrectLoanTypesToUpdateMessage() {
+        assertEquals(List.of("Aprobado", "Rechazado"), Constants.LOAN_TYPES_TO_UPDATE);
+    }
+
+    @Test
     void constantShouldNotBeNullOrEmpty() {
         assertNotNull(Constants.PENDING_REVIEW);
         assertNotNull(Constants.LOAN_TYPES_TO_REVIEW);
+        assertNotNull(Constants.LOAN_TYPES_TO_UPDATE);
+        assertFalse(Constants.LOAN_TYPES_TO_UPDATE.isEmpty());
         assertFalse(Constants.PENDING_REVIEW.isEmpty());
         assertFalse(Constants.LOAN_TYPES_TO_REVIEW.isEmpty());
     }

@@ -40,5 +40,10 @@ public class LoanApplicationReactiveRepositoryAdapter extends ReactiveAdapterOpe
     public Flux<LoanApplication> getLoansApplicationsWithPagination(String status, int size, int page) {
         int offset = (page - 1) * size;
         return repository.findByStatusWithPagination(status, size, offset).map(this::toEntity);
+    }
+
+    @Override
+    public Mono<LoanApplication> updateLoanApplicationStatus(BigInteger id, String status) {
+        return repository.updateStatusById(id, status).map(this::toEntity);
     } 
 }

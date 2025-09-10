@@ -8,6 +8,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
+import static org.springframework.web.reactive.function.server.RequestPredicates.PUT;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 import org.springdoc.core.annotations.RouterOperation;
@@ -70,10 +71,41 @@ public class RouterRest {
                         schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = co.com.bancolombia.api.dto.ErrorResponse.class)
                     )),
                 }
-        ))
+        )),
+        @RouterOperation(
+            path = "/api/v1/solicitud",
+            beanClass = Handler.class,
+            beanMethod = "updateLoanApplicationStatus",
+            method = RequestMethod.PUT,
+            operation = @Operation(
+                operationId = "updateLoanApplicationStatus",
+                tags = {"LoanApplication"},
+                summary = "Update loan application status",
+                description = "Update the status of an existing loan application. Allowed values are 'Aprobado' or 'Rechazado'.",
+                requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Status update request",
+                    required = true,
+                    content = @io.swagger.v3.oas.annotations.media.Content(
+                        schema = @io.swagger.v3.oas.annotations.media.Schema(
+                            implementation = co.com.bancolombia.api.dto.UpdateLoanApplicationDTO.class
+                        )
+                    )
+                ),
+                responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Loan application status updated successfully"),
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid status value or loan application not found", content = @io.swagger.v3.oas.annotations.media.Content(
+                        mediaType = "application/json",
+                        schema = @io.swagger.v3.oas.annotations.media.Schema(
+                            implementation = co.com.bancolombia.api.dto.ErrorResponse.class
+                        )
+                    )),
+                }
+            )
+        )
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
         return route(POST("/api/v1/solicitud"), handler::createLoanApplication)
-            .andRoute(GET("/api/v1/solicitud"), handler::listLoanApplication);
+            .andRoute(GET("/api/v1/solicitud"), handler::listLoanApplication)
+            .andRoute(PUT("/api/v1/solicitud"), handler::updateLoanApplicationStatus);
     }
 }

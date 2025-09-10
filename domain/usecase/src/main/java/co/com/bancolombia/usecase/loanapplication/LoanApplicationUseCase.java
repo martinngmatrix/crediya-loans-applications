@@ -9,6 +9,8 @@ import co.com.bancolombia.model.loanapplication.constants.messages.LoanApplicati
 import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationRepository;
 import co.com.bancolombia.model.loanapplicationdetails.LoanApplicationDetails;
 import co.com.bancolombia.model.loans.gateways.LoanRepository;
+import co.com.bancolombia.model.notification.Notification;
+import co.com.bancolombia.model.notification.gateways.NotificationRepository;
 import co.com.bancolombia.model.user.gateways.UserRepository;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -17,6 +19,7 @@ public class LoanApplicationUseCase {
     private final LoanApplicationRepository repository;
     private final LoanRepository loanRepository;
     private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
 
     public Mono<Void> createLoanApplication(String token, LoanApplication loanApplication, String documentNumber, String loanType) {
         return userRepository.findByDocumentNumber(token, documentNumber)
@@ -62,5 +65,26 @@ public class LoanApplicationUseCase {
                         .content(list)
                         .build()
                 );
+    }
+
+    public Mono<Void> updateLoanApplicationStatus(String token, BigInteger id, String status) {
+        if (!Constants.LOAN_TYPES_TO_UPDATE.contains(status)) {
+            return Mono.error(new RuntimeException(LoanApplicationErrorMessages.INVALID_STATUS));
+        }
+
+        return repository.updateLoanApplicationStatus(id, status)
+                .switchIfEmpty(Mono.error(new RuntimeException(LoanApplicationErrorMessages.LOAN_APPLICATION_NOT_FOUND)))
+                .flatMap(updatedApp ->
+                    userRepository.findById(token, updatedApp.getUserId())
+                        .flatMap(user -> 
+                            notificationRepository.sendNotification(
+                                Notification.builder()
+                                    .email(user.getEmail())
+                                    .message(status)
+                                    .build()
+                            )
+                        )
+                )
+                .then();
     }
 }

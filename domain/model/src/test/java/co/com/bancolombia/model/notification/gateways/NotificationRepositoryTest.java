@@ -1,0 +1,52 @@
+package co.com.bancolombia.model.notification.gateways;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import co.com.bancolombia.model.notification.Notification;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+class NotificationRepositoryTest {
+
+    private NotificationRepository repository;
+
+    @BeforeEach
+    void setUp() {
+        repository = Mockito.mock(NotificationRepository.class);
+    }
+
+    @Test
+    void shouldSendNotificationSuccessfully() {
+        Notification notification = new Notification("Hola", "test@email.com");
+
+        when(repository.sendNotification(any(Notification.class)))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(repository.sendNotification(notification))
+                .verifyComplete();
+
+        verify(repository, times(1)).sendNotification(notification);
+    }
+
+    @Test
+    void shouldReturnErrorWhenNotificationFails() {
+        Notification notification = new Notification("Error", "fail@email.com");
+
+        when(repository.sendNotification(any(Notification.class)))
+                .thenReturn(Mono.error(new RuntimeException("Fallo en envío")));
+
+        StepVerifier.create(repository.sendNotification(notification))
+                .expectErrorMatches(err -> err instanceof RuntimeException &&
+                        err.getMessage().equals("Fallo en envío"))
+                .verify();
+
+        verify(repository, times(1)).sendNotification(notification);
+    }
+}

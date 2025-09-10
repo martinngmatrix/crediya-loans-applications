@@ -18,6 +18,7 @@ import co.com.bancolombia.api.constants.Constants;
 import co.com.bancolombia.api.constants.messages.ApiResponseMessages;
 import co.com.bancolombia.api.dto.CreateLoanApplicationDTO;
 import co.com.bancolombia.api.dto.ErrorResponse;
+import co.com.bancolombia.api.dto.UpdateLoanApplicationDTO;
 import co.com.bancolombia.api.mapper.LoanApplicationDTOMapper;
 import co.com.bancolombia.api.utils.JwtUtil;
 import co.com.bancolombia.api.validation.ValidationService;
@@ -76,5 +77,25 @@ private static final Logger log = LoggerFactory.getLogger(Handler.class);
                     );
                     return ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue(error);
                 }); 
+    }
+
+    public Mono<ServerResponse> updateLoanApplicationStatus(ServerRequest serverRequest) {
+        log.trace(ApiResponseMessages.REQUEST_RECEIVED_UPDATE_LOAN_APPLICATION_STATUS);
+        String token = JwtUtil.extractToken(serverRequest);
+        return serverRequest.bodyToMono(UpdateLoanApplicationDTO.class)
+                .flatMap(validationService::validate)
+                .flatMap(body -> {
+                    BigInteger id = body.id();
+                    String status = body.status();
+                    return loanApplicationUseCase.updateLoanApplicationStatus(token, id, status);
+                })
+                .then(ServerResponse.status(HttpStatus.NO_CONTENT).build())
+                .doOnSuccess(res -> log.info(ApiResponseMessages.REQUEST_PROCESSED_SUCCESSFULLY))
+                .onErrorResume(e -> {
+                    ErrorResponse error = new ErrorResponse(
+                            e.getMessage() != null ? e.getMessage() : Constants.UNEXPECTED_ERROR
+                    );
+                    return ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue(error);
+                });
     }
 }

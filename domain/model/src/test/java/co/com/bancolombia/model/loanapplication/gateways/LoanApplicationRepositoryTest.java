@@ -77,4 +77,29 @@ class LoanApplicationRepositoryTest {
 
         verify(repository, times(1)).getLoansApplicationsWithPagination(Constants.PENDING_REVIEW,1,1);
     }
+
+    @Test
+    void testUpdateLoanApplicationStatus() {
+        LoanApplicationRepository repository = Mockito.mock(LoanApplicationRepository.class);
+
+        BigInteger id = BigInteger.ONE;
+        String newStatus = "APPROVED";
+
+        LoanApplication updatedLoan = LoanApplication.builder()
+                .id(id)
+                .userId(BigInteger.valueOf(100))
+                .loanId(BigInteger.valueOf(200))
+                .amount(BigDecimal.valueOf(15000))
+                .term(24)
+                .status(newStatus)
+                .build();
+
+        when(repository.updateLoanApplicationStatus(id, newStatus)).thenReturn(Mono.just(updatedLoan));
+
+        StepVerifier.create(repository.updateLoanApplicationStatus(id, newStatus))
+                .expectNext(updatedLoan)
+                .verifyComplete();
+
+        verify(repository, times(1)).updateLoanApplicationStatus(id, newStatus);
+    }
 }

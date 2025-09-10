@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import co.com.bancolombia.r2dbc.entity.LoanApplicationEntity;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,4 +21,7 @@ public interface LoanApplicationReactiveRepository extends ReactiveCrudRepositor
         @Param("size") int size,
         @Param("offset") int offset
     );
+
+    @Query("UPDATE loans_applications SET status = :status WHERE id = :id RETURNING *")
+    Mono<LoanApplicationEntity> updateStatusById(@Param("id") BigInteger id, @Param("status") String status);
 }

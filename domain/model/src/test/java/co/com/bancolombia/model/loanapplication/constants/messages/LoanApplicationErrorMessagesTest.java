@@ -24,6 +24,11 @@ class LoanApplicationErrorMessagesTest {
     }
 
     @Test
+    void shouldHaveCorrectLoanApplicationNotFound() {
+        assertEquals("Solicitud de prestamo no encontrado", LoanApplicationErrorMessages.LOAN_APPLICATION_NOT_FOUND);
+    }
+
+    @Test
     void constantsShouldNotBeNullOrEmpty() {
         assertNotNull(LoanApplicationErrorMessages.USER_NOT_FOUND);
         assertFalse(LoanApplicationErrorMessages.USER_NOT_FOUND.isEmpty());
@@ -33,5 +38,8 @@ class LoanApplicationErrorMessagesTest {
 
         assertNotNull(LoanApplicationErrorMessages.LOAN_TYPE_NOT_VALID);
         assertFalse(LoanApplicationErrorMessages.LOAN_TYPE_NOT_VALID.isEmpty());
+
+        assertNotNull(LoanApplicationErrorMessages.LOAN_APPLICATION_NOT_FOUND);
+        assertFalse(LoanApplicationErrorMessages.LOAN_APPLICATION_NOT_FOUND.isEmpty());
     }
 }

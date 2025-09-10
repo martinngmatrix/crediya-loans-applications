@@ -30,3 +30,7 @@ include ':security'
 project(':security').projectDir = file('./infrastructure/entry-points/security')
 include ':jwt'
 project(':jwt').projectDir = file('./infrastructure/driven-adapters/jwt')
+include ':metrics'
+project(':metrics').projectDir = file('./infrastructure/helpers/metrics')
+include ':sqs-sender'
+project(':sqs-sender').projectDir = file('./infrastructure/driven-adapters/sqs-sender') 

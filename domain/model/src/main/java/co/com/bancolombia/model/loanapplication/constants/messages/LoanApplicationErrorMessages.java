@@ -4,4 +4,5 @@ public class LoanApplicationErrorMessages {
     public static final String USER_NOT_FOUND = "Usuario no encontrado";
     public static final String LOAN_TYPE_NOT_VALID = "Tipo de préstamo no válido";
     public static final String INVALID_STATUS = "Estado no permitido";
+    public static final String LOAN_APPLICATION_NOT_FOUND = "Solicitud de prestamo no encontrado";
 }

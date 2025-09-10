@@ -15,7 +15,8 @@ public class RoleAuthorizationFilter implements WebFilter {
     private final Map<String, Map<String, List<String>>> routeRoles = Map.of(
         "/api/v1/solicitud", Map.of(
             "GET", List.of("admin", "asesor"),
-            "POST", List.of("cliente")
+            "POST", List.of("cliente"),
+            "PUT", List.of("admin", "asesor")
         )
     );
 
