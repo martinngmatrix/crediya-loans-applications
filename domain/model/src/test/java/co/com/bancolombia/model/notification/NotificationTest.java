@@ -1,6 +1,9 @@
 package co.com.bancolombia.model.notification;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
@@ -9,45 +12,56 @@ class NotificationTest {
     @Test
     void shouldBuildNotificationWithBuilder() {
         Notification notification = Notification.builder()
-                .message("Hola")
-                .email("test@email.com")
+                .payload(Map.of("message", "Hola mundo"))
+                .queueKey("test-queue")
                 .build();
 
-        assertEquals("Hola", notification.getMessage());
-        assertEquals("test@email.com", notification.getEmail());
+        assertEquals("Hola mundo", notification.getPayload().get("message"));
+        assertEquals("test-queue", notification.getQueueKey());
     }
 
     @Test
     void shouldUseSettersAndGetters() {
         Notification notification = new Notification(null, null);
 
-        notification.setMessage("Nuevo mensaje");
-        notification.setEmail("nuevo@email.com");
+        notification.setPayload(Map.of("key", "Nuevo payload"));
+        notification.setQueueKey("queue-1");
 
-        assertEquals("Nuevo mensaje", notification.getMessage());
-        assertEquals("nuevo@email.com", notification.getEmail());
+        assertEquals("Nuevo payload", notification.getPayload().get("key"));
+        assertEquals("queue-1", notification.getQueueKey());
     }
 
     @Test
     void shouldCreateNotificationWithAllArgsConstructor() {
-        Notification notification = new Notification("Mensaje directo", "directo@email.com");
+        Notification notification = new Notification(
+                Map.of("direct", "Payload directo"),
+                "queue-2"
+        );
 
-        assertEquals("Mensaje directo", notification.getMessage());
-        assertEquals("directo@email.com", notification.getEmail());
+        assertEquals("Payload directo", notification.getPayload().get("direct"));
+        assertEquals("queue-2", notification.getQueueKey());
     }
 
     @Test
     void shouldCopyNotificationWithToBuilder() {
         Notification notification = Notification.builder()
-                .message("Original")
-                .email("original@email.com")
+                .payload(Map.of("key", "Original"))
+                .queueKey("queue-3")
                 .build();
 
         Notification copy = notification.toBuilder()
-                .message("Modificado")
+                .payload(Map.of("key", "Modificado"))
                 .build();
 
-        assertEquals("Modificado", copy.getMessage());
-        assertEquals("original@email.com", copy.getEmail());
+        assertEquals("Modificado", copy.getPayload().get("key"));
+        assertEquals("queue-3", copy.getQueueKey()); // se mantiene igual
+    }
+
+    @Test
+    void shouldAllowNullPayloadAndQueueKey() {
+        Notification notification = new Notification(null, null);
+
+        assertNull(notification.getPayload());
+        assertNull(notification.getQueueKey());
     }
 }

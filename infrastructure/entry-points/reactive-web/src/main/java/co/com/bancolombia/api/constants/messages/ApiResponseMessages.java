@@ -6,4 +6,6 @@ public class ApiResponseMessages {
     public static final String REQUEST_RECEIVED_LIST_LOAN_APPLICATION = "Inicio del proceso de listado de solicitudes";
     public static final String REQUEST_PROCESSED_SUCCESSFULLY = "Datos obtenidos con exito";
     public static final String REQUEST_RECEIVED_UPDATE_LOAN_APPLICATION_STATUS = "Inicio del proceso de actualizacion de solicitud de prestamo";
+    public static final String REQUEST_RECEIVED_CALCULATE_DEBT_CAPACITY = "Inicio del proceso de calculo de capacidad de endeudamiento";
+    public static final String REQUEST_CALCULATE_DEBT_PROCESSED_SUCCESSFULLY = "Solicitud procesada con exito";
 }

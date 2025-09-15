@@ -38,7 +38,7 @@ class LoanApplicationRepositoryTest {
         when(repository.createLoanApplication(any(LoanApplication.class), any(String.class), any(String.class)))
                 .thenReturn(Mono.empty());
 
-        Mono<Void> result = repository.createLoanApplication(loanApplication, documentNumber, loanType);
+        Mono<LoanApplication> result = repository.createLoanApplication(loanApplication, documentNumber, loanType);
 
         StepVerifier.create(result)
                 .verifyComplete();
@@ -101,5 +101,39 @@ class LoanApplicationRepositoryTest {
                 .verifyComplete();
 
         verify(repository, times(1)).updateLoanApplicationStatus(id, newStatus);
+    }
+
+    @Test
+    void testGetApprovedLoansApplications() {
+        LoanApplicationRepository repository = Mockito.mock(LoanApplicationRepository.class);
+        BigInteger userId = BigInteger.valueOf(100);
+        
+        LoanApplication approved1 = LoanApplication.builder()
+                .id(BigInteger.ONE)
+                .userId(userId)
+                .loanId(BigInteger.valueOf(200))
+                .amount(BigDecimal.valueOf(12000))
+                .term(24)
+                .status("APPROVED")
+                .build();
+
+        LoanApplication approved2 = LoanApplication.builder()
+                .id(BigInteger.TWO)
+                .userId(userId)
+                .loanId(BigInteger.valueOf(201))
+                .amount(BigDecimal.valueOf(18000))
+                .term(36)
+                .status("APPROVED")
+                .build();
+
+        when(repository.getApprovedLoansApplications(userId))
+                .thenReturn(Flux.just(approved1, approved2));
+
+        StepVerifier.create(repository.getApprovedLoansApplications(userId))
+                .expectNext(approved1)
+                .expectNext(approved2)
+                .verifyComplete();
+
+        verify(repository, times(1)).getApprovedLoansApplications(userId);
     }
 }

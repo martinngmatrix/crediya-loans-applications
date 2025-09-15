@@ -32,8 +32,8 @@ public class LoanApplicationReactiveRepositoryAdapter extends ReactiveAdapterOpe
 
     @Transactional
     @Override
-    public Mono<Void> createLoanApplication(LoanApplication loanApplication, String documentNumber, String loanType) {
-        return repository.save(toData(loanApplication)).then();
+    public Mono<LoanApplication> createLoanApplication(LoanApplication loanApplication, String documentNumber, String loanType) {
+        return repository.save(toData(loanApplication)).map(this::toEntity);
     }
 
     @Override
@@ -45,5 +45,15 @@ public class LoanApplicationReactiveRepositoryAdapter extends ReactiveAdapterOpe
     @Override
     public Mono<LoanApplication> updateLoanApplicationStatus(BigInteger id, String status) {
         return repository.updateStatusById(id, status).map(this::toEntity);
+    }
+
+    @Override
+    public Flux<LoanApplication> getApprovedLoansApplications(BigInteger userId) {
+        return repository.findApprovedLoansByUserId(userId).map(this::toEntity);
+    }
+
+    @Override
+    public Mono<LoanApplication> getLoanApplicationById(BigInteger loanApplicationId) {
+        return repository.findById(loanApplicationId).map(this::toEntity);
     } 
 }

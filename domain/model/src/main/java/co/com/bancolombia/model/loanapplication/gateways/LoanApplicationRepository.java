@@ -8,7 +8,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface LoanApplicationRepository {
-    Mono<Void> createLoanApplication(LoanApplication loanApplication, String documentNumber, String loanType);
+    Mono<LoanApplication> createLoanApplication(LoanApplication loanApplication, String documentNumber, String loanType);
     Flux<LoanApplication> getLoansApplicationsWithPagination(String status, int size, int page);
     Mono<LoanApplication> updateLoanApplicationStatus(BigInteger id, String status);
+    Flux<LoanApplication> getApprovedLoansApplications(BigInteger userId);
+    Mono<LoanApplication> getLoanApplicationById(BigInteger loanApplicationId);
 }

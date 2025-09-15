@@ -3,8 +3,6 @@ package co.com.bancolombia.api;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigInteger;
-import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +14,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 
 import co.com.bancolombia.api.constants.Constants;
 import co.com.bancolombia.api.constants.messages.ApiResponseMessages;
+import co.com.bancolombia.api.dto.CalculateDebtCapacityDTO;
 import co.com.bancolombia.api.dto.CreateLoanApplicationDTO;
 import co.com.bancolombia.api.dto.ErrorResponse;
 import co.com.bancolombia.api.dto.UpdateLoanApplicationDTO;
@@ -42,8 +41,9 @@ private static final Logger log = LoggerFactory.getLogger(Handler.class);
                     var loanApplication = loanApplicationMapper.toModel(dto);
                     String documentNumber = dto.documentNumber();
                     String loanType = dto.loanType();
+                    Boolean automaticValidation = dto.automaticValidation();
 
-                    return loanApplicationUseCase.createLoanApplication(token, loanApplication, documentNumber, loanType);
+                    return loanApplicationUseCase.createLoanApplication(token, loanApplication, documentNumber, loanType, automaticValidation);
                 })
                 .doOnSuccess(loanApp -> log.info(ApiResponseMessages.LOAN_APPLICATION_CREATED))
                 .then(ServerResponse
@@ -91,6 +91,27 @@ private static final Logger log = LoggerFactory.getLogger(Handler.class);
                 })
                 .then(ServerResponse.status(HttpStatus.NO_CONTENT).build())
                 .doOnSuccess(res -> log.info(ApiResponseMessages.REQUEST_PROCESSED_SUCCESSFULLY))
+                .onErrorResume(e -> {
+                    ErrorResponse error = new ErrorResponse(
+                            e.getMessage() != null ? e.getMessage() : Constants.UNEXPECTED_ERROR
+                    );
+                    return ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue(error);
+                });
+    }
+
+    public Mono<ServerResponse> calculateDebtCapacity(ServerRequest serverRequest) {
+        log.trace(ApiResponseMessages.REQUEST_RECEIVED_CALCULATE_DEBT_CAPACITY);
+        String token = JwtUtil.extractToken(serverRequest);
+        return serverRequest.bodyToMono(CalculateDebtCapacityDTO.class)
+                .flatMap(body ->
+                    loanApplicationUseCase.calculateDebtCapacity(
+                        token,
+                        body.userId(), 
+                        body.loanApplicationId()
+                    )
+                )
+                .then(ServerResponse.status(HttpStatus.ACCEPTED).build())
+                .doOnSuccess(res -> log.info(ApiResponseMessages.REQUEST_CALCULATE_DEBT_PROCESSED_SUCCESSFULLY))
                 .onErrorResume(e -> {
                     ErrorResponse error = new ErrorResponse(
                             e.getMessage() != null ? e.getMessage() : Constants.UNEXPECTED_ERROR

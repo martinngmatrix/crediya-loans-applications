@@ -24,4 +24,7 @@ public interface LoanApplicationReactiveRepository extends ReactiveCrudRepositor
 
     @Query("UPDATE loans_applications SET status = :status WHERE id = :id RETURNING *")
     Mono<LoanApplicationEntity> updateStatusById(@Param("id") BigInteger id, @Param("status") String status);
+
+    @Query("SELECT * FROM loans_applications WHERE user_id = :userId AND status = 'Aprobado'")
+    Flux<LoanApplicationEntity> findApprovedLoansByUserId(@Param("userId") BigInteger userId);
 }

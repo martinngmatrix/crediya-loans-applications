@@ -101,11 +101,55 @@ public class RouterRest {
                     )),
                 }
             )
+        ),
+        @RouterOperation(
+            path = "/api/v1/calcular-capacidad",
+            beanClass = Handler.class,
+            beanMethod = "calculateDebtCapacity",
+            method = RequestMethod.POST,
+            operation = @Operation(
+                operationId = "calculateDebtCapacity",
+                tags = {"DebtCapacity"},
+                summary = "Calculate debt capacity",
+                description = "Calculates the debt capacity for a given user and loan request",
+                requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Request with userId and newLoan data",
+                    required = true,
+                    content = @io.swagger.v3.oas.annotations.media.Content(
+                        schema = @io.swagger.v3.oas.annotations.media.Schema(
+                            implementation = co.com.bancolombia.api.dto.CalculateDebtCapacityDTO.class
+                        )
+                    )
+                ),
+                responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "202",
+                        description = "Debt capacity calculated successfully",
+                        content = @io.swagger.v3.oas.annotations.media.Content(
+                            mediaType = "application/json",
+                            schema = @io.swagger.v3.oas.annotations.media.Schema(
+                                example = "{ \"message\": \"Aprobado\" }"
+                            )
+                        )
+                    ),
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                        responseCode = "400",
+                        description = "Invalid input data",
+                        content = @io.swagger.v3.oas.annotations.media.Content(
+                            mediaType = "application/json",
+                            schema = @io.swagger.v3.oas.annotations.media.Schema(
+                                implementation = co.com.bancolombia.api.dto.ErrorResponse.class
+                            )
+                        )
+                    )
+                }
+            )
         )
     })
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
         return route(POST("/api/v1/solicitud"), handler::createLoanApplication)
             .andRoute(GET("/api/v1/solicitud"), handler::listLoanApplication)
-            .andRoute(PUT("/api/v1/solicitud"), handler::updateLoanApplicationStatus);
+            .andRoute(PUT("/api/v1/solicitud"), handler::updateLoanApplicationStatus)
+            .andRoute(POST("/api/v1/calcular-capacidad"), handler::calculateDebtCapacity);
     }
 }

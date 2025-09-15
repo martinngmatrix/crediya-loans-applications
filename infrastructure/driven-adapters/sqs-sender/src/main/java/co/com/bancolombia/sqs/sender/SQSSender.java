@@ -5,6 +5,7 @@ import co.com.bancolombia.model.notification.gateways.NotificationRepository;
 import co.com.bancolombia.sqs.sender.config.SQSSenderProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,16 +40,25 @@ public class SQSSender implements NotificationRepository {
 
     @Override
     public Mono<Void> sendNotification(Notification notification) {
+        log.info("Message to send {}", notification.getPayload());
         return Mono.fromCallable(() -> {
             try {
                 String json = mapper.writeValueAsString(notification);
-                return buildRequest(json);
+                String queueUrl = properties.queues().get(notification.getQueueKey());
+                log.info("QueueKey={}, QueueUrl={}", notification.getQueueKey(), queueUrl);
+                return notification.getQueueKey() == null || queueUrl == null
+                        ? buildRequest(json):
+                        SendMessageRequest.builder()
+                                .queueUrl(queueUrl)
+                                .messageBody(json)
+                                .build();
             } catch (JsonProcessingException e) {
                 throw new RuntimeException("Error serializando notificación", e);
             }
         })
-        .flatMap(request -> Mono.fromFuture(client.sendMessage(request)))
-        .doOnNext(response -> log.debug("Notification sent {}", response.messageId()))
+        .flatMap(request -> Mono.fromFuture(client.sendMessage(request))
+        .doOnNext(response -> log.info("Notification sent {}", response)))
+        .doOnError(error -> log.error("Error sending notification", error))
         .then();
     }
 }

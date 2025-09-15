@@ -5,6 +5,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -24,7 +26,10 @@ class NotificationRepositoryTest {
 
     @Test
     void shouldSendNotificationSuccessfully() {
-        Notification notification = new Notification("Hola", "test@email.com");
+        Notification notification = new Notification(
+                Map.of("message", "Hola"),
+                "queue-1"
+        );
 
         when(repository.sendNotification(any(Notification.class)))
                 .thenReturn(Mono.empty());
@@ -37,7 +42,10 @@ class NotificationRepositoryTest {
 
     @Test
     void shouldReturnErrorWhenNotificationFails() {
-        Notification notification = new Notification("Error", "fail@email.com");
+        Notification notification = new Notification(
+                Map.of("message", "Error"),
+                "queue-2"
+        );
 
         when(repository.sendNotification(any(Notification.class)))
                 .thenReturn(Mono.error(new RuntimeException("Fallo en envío")));

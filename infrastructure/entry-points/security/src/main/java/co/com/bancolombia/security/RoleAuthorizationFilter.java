@@ -17,6 +17,9 @@ public class RoleAuthorizationFilter implements WebFilter {
             "GET", List.of("admin", "asesor"),
             "POST", List.of("cliente"),
             "PUT", List.of("admin", "asesor")
+        ),
+        "/api/v1/calcular-capacidad", Map.of(
+            "POST", List.of("admin")
         )
     );
 

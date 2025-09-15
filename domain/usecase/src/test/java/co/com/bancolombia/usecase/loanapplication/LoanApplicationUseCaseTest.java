@@ -14,6 +14,7 @@ import java.math.BigInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import co.com.bancolombia.model.debtcapacity.DebtCapacity;
 import co.com.bancolombia.model.loanapplication.LoanApplication;
 import co.com.bancolombia.model.loanapplication.constants.Constants;
 import co.com.bancolombia.model.loanapplication.constants.messages.LoanApplicationErrorMessages;
@@ -53,6 +54,7 @@ public class LoanApplicationUseCaseTest {
                 LoanApplication loanApplication = new LoanApplication();
                 String documentNumber = "123456789";
                 String loanType = "Personal";
+                Boolean automaticValidation = false;
 
                 User user = User.builder().id(BigInteger.ONE).documentNumber(documentNumber).build();
                 Loan loan = Loan.builder().id(BigInteger.TWO).name(loanType).build();
@@ -62,13 +64,41 @@ public class LoanApplicationUseCaseTest {
                 when(repository.createLoanApplication(any(), eq(documentNumber), eq(loanType)))
                                 .thenReturn(Mono.empty());
 
-                Mono<Void> result = useCase.createLoanApplication(token, loanApplication, documentNumber, loanType);
+                Mono<Void> result = useCase.createLoanApplication(token, loanApplication, documentNumber, loanType, automaticValidation);
 
                 StepVerifier.create(result).verifyComplete();
 
                 verify(repository, times(1)).createLoanApplication(loanApplication, documentNumber, loanType);
                 verify(userRepository, times(1)).findByDocumentNumber(token, documentNumber);
                 verify(loanRepository, times(1)).findByName(loanType);
+        }
+
+        @Test
+        void createLoanApplicationWithAutomaticValidation() {
+                LoanApplication loanApplication = new LoanApplication();
+                loanApplication.setId(BigInteger.TEN);
+                String documentNumber = "123456789";
+                String loanType = "Personal";
+                Boolean automaticValidation = true;
+
+                User user = User.builder().id(BigInteger.ONE).documentNumber(documentNumber).email("user@test.com").baseSalary(BigDecimal.valueOf(3000)).build();
+                Loan loan = Loan.builder().id(BigInteger.TWO).name(loanType).build();
+
+                when(userRepository.findByDocumentNumber(token, documentNumber)).thenReturn(Mono.just(user));
+                when(loanRepository.findByName(loanType)).thenReturn(Mono.just(loan));
+                when(repository.createLoanApplication(any(), eq(documentNumber), eq(loanType)))
+                        .thenReturn(Mono.just(loanApplication));
+
+                when(userRepository.findById(token, user.getId())).thenReturn(Mono.just(user));
+                when(repository.getApprovedLoansApplications(user.getId())).thenReturn(Flux.empty());
+                when(repository.getLoanApplicationById(loanApplication.getId())).thenReturn(Mono.just(loanApplication));
+                when(notificationRepository.sendNotification(any())).thenReturn(Mono.empty());
+
+                StepVerifier.create(useCase.createLoanApplication(token, loanApplication, documentNumber, loanType, automaticValidation))
+                        .verifyComplete();
+
+                verify(repository).createLoanApplication(loanApplication, documentNumber, loanType);
+                verify(notificationRepository).sendNotification(any());
         }
 
         @Test
@@ -79,15 +109,15 @@ public class LoanApplicationUseCaseTest {
 
                 when(userRepository.findByDocumentNumber(token, documentNumber)).thenReturn(Mono.empty());
 
-                Mono<Void> result = useCase.createLoanApplication(token, loanApplication, documentNumber, loanType);
+                Mono<Void> result = useCase.createLoanApplication(token, loanApplication, documentNumber, loanType, false);
 
                 StepVerifier.create(result)
-                                .expectErrorMatches(err -> err instanceof RuntimeException &&
-                                                err.getMessage().equals("Usuario no encontrado"))
-                                .verify();
+                        .expectErrorMatches(err -> err instanceof RuntimeException &&
+                                err.getMessage().equals(LoanApplicationErrorMessages.USER_NOT_FOUND))
+                        .verify();
 
-                verify(userRepository, times(1)).findByDocumentNumber(token, documentNumber);
-                verifyNoInteractions(loanRepository, repository);
+                verifyNoInteractions(loanRepository);
+                verifyNoInteractions(repository);
         }
 
         @Test
@@ -101,41 +131,41 @@ public class LoanApplicationUseCaseTest {
                 when(userRepository.findByDocumentNumber(token, documentNumber)).thenReturn(Mono.just(user));
                 when(loanRepository.findByName(loanType)).thenReturn(Mono.empty());
 
-                Mono<Void> result = useCase.createLoanApplication(token, loanApplication, documentNumber, loanType);
+                Mono<Void> result = useCase.createLoanApplication(token, loanApplication, documentNumber, loanType, false);
 
                 StepVerifier.create(result)
-                                .expectErrorMatches(err -> err instanceof RuntimeException &&
-                                                err.getMessage().equals("Tipo de préstamo no válido"))
-                                .verify();
-
-                verify(userRepository, times(1)).findByDocumentNumber(token, documentNumber);
-                verify(loanRepository, times(1)).findByName(loanType);
-                verifyNoInteractions(repository);
+                        .expectErrorMatches(err -> err instanceof RuntimeException &&
+                                err.getMessage().equals(LoanApplicationErrorMessages.LOAN_TYPE_NOT_VALID))
+                        .verify();
         }
 
         @Test
         void createLoanApplicationRepositoryError() {
-                LoanApplication loanApplication = new LoanApplication();
-                String documentNumber = "123456789";
-                String loanType = "Personal";
+        LoanApplication loanApplication = new LoanApplication();
+        String documentNumber = "123456789";
+        String loanType = "Personal";
+        Boolean automaticValidation = false;
 
-                User user = User.builder().id(BigInteger.ONE).documentNumber(documentNumber).build();
-                Loan loan = Loan.builder().id(BigInteger.TWO).name(loanType).build();
+        User user = User.builder().id(BigInteger.ONE).documentNumber(documentNumber).build();
+        Loan loan = Loan.builder().id(BigInteger.TWO).name(loanType).build();
 
-                RuntimeException dbError = new RuntimeException("DB error");
+        RuntimeException dbError = new RuntimeException("DB error");
 
-                when(userRepository.findByDocumentNumber(token, documentNumber)).thenReturn(Mono.just(user));
-                when(loanRepository.findByName(loanType)).thenReturn(Mono.just(loan));
-                when(repository.createLoanApplication(any(), eq(documentNumber), eq(loanType)))
-                                .thenReturn(Mono.error(dbError));
+        when(userRepository.findByDocumentNumber(token, documentNumber)).thenReturn(Mono.just(user));
+        when(loanRepository.findByName(loanType)).thenReturn(Mono.just(loan));
+        when(repository.createLoanApplication(any(), eq(documentNumber), eq(loanType)))
+                .thenReturn(Mono.error(dbError));
 
-                Mono<Void> result = useCase.createLoanApplication(token, loanApplication, documentNumber, loanType);
+        Mono<Void> result = useCase.createLoanApplication(token, loanApplication, documentNumber, loanType, automaticValidation);
 
-                StepVerifier.create(result)
-                                .expectErrorMatches(err -> err.getMessage().equals("DB error"))
-                                .verify();
+        StepVerifier.create(result)
+                .expectErrorMatches(err -> err instanceof RuntimeException &&
+                        err.getMessage().equals("DB error"))
+                .verify();
 
-                verify(repository, times(1)).createLoanApplication(loanApplication, documentNumber, loanType);
+        verify(repository, times(1)).createLoanApplication(loanApplication, documentNumber, loanType);
+        verify(userRepository, times(1)).findByDocumentNumber(token, documentNumber);
+        verify(loanRepository, times(1)).findByName(loanType);
         }
 
         @Test
@@ -291,5 +321,115 @@ public class LoanApplicationUseCaseTest {
                 verify(repository, times(1)).updateLoanApplicationStatus(id, status);
                 verify(userRepository, times(1)).findById(token, updatedApp.getUserId());
                 verify(notificationRepository, times(1)).sendNotification(any());
+        }
+
+        @Test
+        void calculateDebtCapacitySuccess() {
+                BigInteger userId = BigInteger.ONE;
+                BigInteger applicationId = BigInteger.TEN;
+
+                User user = User.builder()
+                        .id(userId)
+                        .email("user@test.com")
+                        .baseSalary(BigDecimal.valueOf(3000))
+                        .build();
+
+                LoanApplication approvedLoan = LoanApplication.builder()
+                        .id(BigInteger.valueOf(11))
+                        .userId(userId)
+                        .amount(BigDecimal.valueOf(2000))
+                        .status("APPROVED")
+                        .build();
+
+                LoanApplication newLoan = LoanApplication.builder()
+                        .id(applicationId)
+                        .userId(userId)
+                        .amount(BigDecimal.valueOf(5000))
+                        .status(Constants.PENDING_REVIEW)
+                        .build();
+
+                when(userRepository.findById(token, userId)).thenReturn(Mono.just(user));
+                when(repository.getApprovedLoansApplications(userId)).thenReturn(Flux.just(approvedLoan));
+                when(repository.getLoanApplicationById(applicationId)).thenReturn(Mono.just(newLoan));
+                when(notificationRepository.sendNotification(any())).thenReturn(Mono.empty());
+
+                Mono<Void> result = useCase.calculateDebtCapacity(token, userId, applicationId);
+
+                StepVerifier.create(result).verifyComplete();
+
+                verify(userRepository).findById(token, userId);
+                verify(repository).getApprovedLoansApplications(userId);
+                verify(repository).getLoanApplicationById(applicationId);
+                verify(notificationRepository).sendNotification(any());
+        }
+
+        @Test
+        void processDebtCapacityResultSuccess() {
+        DebtCapacity debtCapacity = DebtCapacity.builder()
+                .loanApplicationId(BigInteger.ONE)
+                .email("user@test.com")
+                .result("APPROVED")
+                .build();
+
+        LoanApplication updatedApp = LoanApplication.builder()
+                .id(debtCapacity.getLoanApplicationId())
+                .status(debtCapacity.getResult())
+                .build();
+
+        when(repository.updateLoanApplicationStatus(debtCapacity.getLoanApplicationId(), debtCapacity.getResult()))
+                .thenReturn(Mono.just(updatedApp));
+        when(notificationRepository.sendNotification(any())).thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.processDebtCapacityResult(debtCapacity))
+                .verifyComplete();
+
+        verify(repository).updateLoanApplicationStatus(debtCapacity.getLoanApplicationId(), debtCapacity.getResult());
+        verify(notificationRepository).sendNotification(any());
+        }
+
+        @Test
+        void processDebtCapacityResultLoanApplicationNotFound() {
+        DebtCapacity debtCapacity = DebtCapacity.builder()
+                .loanApplicationId(BigInteger.ONE)
+                .email("user@test.com")
+                .result("APPROVED")
+                .build();
+
+        when(repository.updateLoanApplicationStatus(debtCapacity.getLoanApplicationId(), debtCapacity.getResult()))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.processDebtCapacityResult(debtCapacity))
+                .expectErrorMatches(err -> err instanceof RuntimeException &&
+                        err.getMessage().equals(LoanApplicationErrorMessages.LOAN_APPLICATION_NOT_FOUND))
+                .verify();
+
+        verify(repository).updateLoanApplicationStatus(debtCapacity.getLoanApplicationId(), debtCapacity.getResult());
+        verifyNoInteractions(notificationRepository);
+        }
+
+        @Test
+        void processDebtCapacityResultNotificationError() {
+        DebtCapacity debtCapacity = DebtCapacity.builder()
+                .loanApplicationId(BigInteger.ONE)
+                .email("user@test.com")
+                .result("APPROVED")
+                .build();
+
+        LoanApplication updatedApp = LoanApplication.builder()
+                .id(debtCapacity.getLoanApplicationId())
+                .status(debtCapacity.getResult())
+                .build();
+
+        when(repository.updateLoanApplicationStatus(debtCapacity.getLoanApplicationId(), debtCapacity.getResult()))
+                .thenReturn(Mono.just(updatedApp));
+        when(notificationRepository.sendNotification(any()))
+                .thenReturn(Mono.error(new RuntimeException("Notification failed")));
+
+        StepVerifier.create(useCase.processDebtCapacityResult(debtCapacity))
+                .expectErrorMatches(err -> err.getMessage().equals("Notification failed"))
+                .verify();
+
+        verify(repository).updateLoanApplicationStatus(debtCapacity.getLoanApplicationId(), debtCapacity.getResult());
+        verify(notificationRepository).sendNotification(any());
         }
 }

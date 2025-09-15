@@ -9,5 +9,7 @@ public record CreateLoanApplicationDTO (
     String documentNumber,
     BigDecimal amount,
     Integer term,
-    String loanType
+    String loanType,
+    BigDecimal interestRate,
+    Boolean automaticValidation
 ) {}
