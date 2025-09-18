@@ -432,4 +432,32 @@ public class LoanApplicationUseCaseTest {
         verify(repository).updateLoanApplicationStatus(debtCapacity.getLoanApplicationId(), debtCapacity.getResult());
         verify(notificationRepository).sendNotification(any());
         }
+
+        @Test
+        void processDebtCapacityResultSuccessWithApprovedLoans() {
+                DebtCapacity debtCapacity = DebtCapacity.builder()
+                        .loanApplicationId(BigInteger.ONE)
+                        .email("user@test.com")
+                        .result(Constants.LOAN_TYPES_TO_UPDATE.get(0))
+                        .build();
+
+                LoanApplication updatedApp = LoanApplication.builder()
+                        .id(debtCapacity.getLoanApplicationId())
+                        .amount(BigDecimal.valueOf(5000))
+                        .status(debtCapacity.getResult())
+                        .build();
+
+                when(repository.updateLoanApplicationStatus(debtCapacity.getLoanApplicationId(), debtCapacity.getResult()))
+                        .thenReturn(Mono.just(updatedApp));
+                when(repository.getLoanApplicationById(debtCapacity.getLoanApplicationId()))
+                        .thenReturn(Mono.just(updatedApp));
+                when(notificationRepository.sendNotification(any())).thenReturn(Mono.empty());
+
+                StepVerifier.create(useCase.processDebtCapacityResult(debtCapacity))
+                        .verifyComplete();
+
+                verify(repository).updateLoanApplicationStatus(debtCapacity.getLoanApplicationId(), debtCapacity.getResult());
+                verify(repository).getLoanApplicationById(debtCapacity.getLoanApplicationId());
+                verify(notificationRepository, times(2)).sendNotification(any());
+        }
 }

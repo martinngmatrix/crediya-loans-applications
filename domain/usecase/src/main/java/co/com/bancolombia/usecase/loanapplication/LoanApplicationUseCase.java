@@ -132,19 +132,32 @@ public class LoanApplicationUseCase {
 
     public Mono<Void> processDebtCapacityResult(DebtCapacity debtCapacity) {
         String htmlPlan = HtmlUtil.generatePaymentPlanHtml(debtCapacity);
+
         return repository.updateLoanApplicationStatus(debtCapacity.getLoanApplicationId(), debtCapacity.getResult())
-            .switchIfEmpty(Mono.error(new RuntimeException(LoanApplicationErrorMessages.LOAN_APPLICATION_NOT_FOUND)))
-            .flatMap(
-                updatedApp -> {
-                    Map<String, Object> payload = Map.of(
-                        "email", debtCapacity.getEmail(),
-                        "message", htmlPlan
-                    );
-                    return notificationRepository.sendNotification(Notification.builder()
-                                .payload(payload)
-                                .queueKey("notifications")
-                                .build());
-                }
-            );
+                .switchIfEmpty(Mono.error(new RuntimeException(LoanApplicationErrorMessages.LOAN_APPLICATION_NOT_FOUND)))
+                .flatMap(updatedApp -> {
+                    Mono<Void> notificationMono = notificationRepository.sendNotification(Notification.builder()
+                            .payload(Map.of(
+                                    "email", debtCapacity.getEmail(),
+                                    "message", htmlPlan
+                            ))
+                            .queueKey("notifications")
+                            .build());
+
+                    Mono<Void> approvedLoansMono = Mono.empty();
+                    if (debtCapacity.getResult().equals(Constants.LOAN_TYPES_TO_UPDATE.get(0))) {
+                        approvedLoansMono = repository.getLoanApplicationById(debtCapacity.getLoanApplicationId())
+                                .switchIfEmpty(Mono.error(new RuntimeException(LoanApplicationErrorMessages.LOAN_APPLICATION_NOT_FOUND)))
+                                .flatMap(loanApp -> notificationRepository.sendNotification(Notification.builder()
+                                        .payload(Map.of(
+                                                "loanApplicationId", debtCapacity.getLoanApplicationId(),
+                                                "status", debtCapacity.getResult(),
+                                                "amount", loanApp.getAmount()
+                                        ))
+                                        .queueKey("approvedLoans")
+                                        .build()));
+                    }
+                    return Mono.when(notificationMono, approvedLoansMono);
+                });
     }
 }

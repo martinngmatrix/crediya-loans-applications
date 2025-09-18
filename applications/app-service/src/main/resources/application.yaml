@@ -44,6 +44,7 @@ adapter:
     endpoint: "https://sqs.us-east-1.amazonaws.com"
     queues:
       notifications: "https://sqs.us-east-1.amazonaws.com/571202862746/SQSQueueNotifications"
+      approvedLoans: "https://sqs.us-east-1.amazonaws.com/571202862746/ApprovedLoanApplicationQueue"
 resilience4j:
   circuitbreaker:
     instances:
