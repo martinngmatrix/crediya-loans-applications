@@ -26,18 +26,12 @@ management:
 cors:
   allowed-origins: "http://localhost:4200,http://autenticacion:8080"
 adapters.r2dbc:
-  host: "solicitudes-db"
   port: 5432
-  database: "solicitudes_db"
-  username: "user"
-  password: "userpass"
 jwt:
-  secret: "u1FZ7xZkdlp7uPqFz3ME7J8Qz3YOXkU0jU6aWw+4/9uQ4dFw6Nw5Y8JtdfG2L/zzU7fNHbZx4fM="
   expiration: 3600
 adapter:
   restconsumer:
     timeout: 5000
-    url: "http://autenticacion:8080/api/v1"
   sqs:
     region: "us-east-1"
     queueUrl: "https://sqs.us-east-1.amazonaws.com/571202862746/solicitudes-requests"
@@ -75,3 +69,6 @@ entrypoint:
     maxNumberOfMessages: 10
     visibilityTimeoutSeconds: 10
     numberOfThreads: 1
+aws:
+  region: "us-east-1"
+  secretName: "prod/CrediYaApp/credentials"

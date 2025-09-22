@@ -33,7 +33,13 @@ public class JwtAuthenticationFilter implements WebFilter {
                 "/webjars/",
                 "/webjars/**",
                 "/configuration/ui",
-                "/configuration/security"
+                "/configuration/security",
+                "/actuator/",
+                "/actuator",
+                "/actuator/health/",
+                "/actuator/health",
+                "/health/",
+                "/health"
         );
         String path = exchange.getRequest().getPath().value();
 
@@ -45,13 +51,23 @@ public class JwtAuthenticationFilter implements WebFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
 
-            if (jwtService.validateToken(token)) {
-                String role = jwtService.getRoleFromToken(token);
-
-                exchange.getAttributes().put("role", role);
-
-                return chain.filter(exchange);
-            }
+            return jwtService.validateToken(token)
+                    .flatMap(valid -> {
+                        if (valid) {
+                            return jwtService.getRoleFromToken(token)
+                                    .flatMap(role -> {
+                                        exchange.getAttributes().put("role", role);
+                                        return chain.filter(exchange);
+                                    });
+                        } else {
+                            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                            return exchange.getResponse().setComplete();
+                        }
+                    })
+                    .onErrorResume(e -> {
+                        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                        return exchange.getResponse().setComplete();
+                    });
         }
 
         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);

@@ -9,6 +9,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import co.com.bancolombia.consumer.model.SecretModel;
+import co.com.bancolombia.secretsmanager.api.GenericManagerAsync;
+import co.com.bancolombia.secretsmanager.api.exceptions.SecretException;
 import reactor.netty.http.client.HttpClient;
 
 import static io.netty.channel.ChannelOption.CONNECT_TIMEOUT_MILLIS;
@@ -16,24 +20,33 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 @Configuration
 public class RestConsumerConfig {
-
-    private final String url;
-
+    private final GenericManagerAsync secretManager;
+    private final String secretName;
     private final int timeout;
 
-    public RestConsumerConfig(@Value("${adapter.restconsumer.url}") String url,
+    public RestConsumerConfig(GenericManagerAsync secretManager,
+                            @Value("${aws.secretName}") String secretName,
                               @Value("${adapter.restconsumer.timeout}") int timeout) {
-        this.url = url;
         this.timeout = timeout;
+        this.secretManager = secretManager;
+        this.secretName = secretName;
     }
 
     @Bean
     public WebClient getWebClient(WebClient.Builder builder) {
-        return builder
-            .baseUrl(url)
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-            .clientConnector(getClientHttpConnector())
-            .build();
+        try {
+            String url = secretManager.getSecret(secretName, SecretModel.class)
+            .map(SecretModel::getURL_MS_AUTENTICACION)
+            .block();
+            
+            return builder
+                .baseUrl(url)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                .clientConnector(getClientHttpConnector())
+                .build();
+        } catch (SecretException e) {
+            throw new RuntimeException("Error obteniendo credenciales de AWS Secrets Manager", e);
+        }
     }
 
     private ClientHttpConnector getClientHttpConnector() {
@@ -49,5 +62,4 @@ public class RestConsumerConfig {
                     connection.addHandlerLast(new WriteTimeoutHandler(timeout, MILLISECONDS));
                 }));
     }
-
 }
