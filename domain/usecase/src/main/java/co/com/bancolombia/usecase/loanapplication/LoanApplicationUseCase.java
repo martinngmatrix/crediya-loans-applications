@@ -13,9 +13,11 @@ import co.com.bancolombia.model.loanapplicationdetails.LoanApplicationDetails;
 import co.com.bancolombia.model.loans.gateways.LoanRepository;
 import co.com.bancolombia.model.notification.Notification;
 import co.com.bancolombia.model.notification.gateways.NotificationRepository;
+import co.com.bancolombia.model.report.gateways.ReportRepository;
 import co.com.bancolombia.model.user.gateways.UserRepository;
 import co.com.bancolombia.utils.HtmlUtil;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class LoanApplicationUseCase {
@@ -23,6 +25,7 @@ public class LoanApplicationUseCase {
     private final LoanRepository loanRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
+    private final ReportRepository reportRepository;
 
     public Mono<Void> createLoanApplication(String token, LoanApplication loanApplication, String documentNumber, String loanType, Boolean automaticValidation) {
         return userRepository.findByDocumentNumber(token, documentNumber)
@@ -159,5 +162,32 @@ public class LoanApplicationUseCase {
                     }
                     return Mono.when(notificationMono, approvedLoansMono);
                 });
+    }
+
+    public Mono<Void> sendBusinessPerformance() {
+        return reportRepository.getEntityBySomeKeys(
+                    co.com.bancolombia.model.report.constants.Constants.APPROVED_STATUS
+                )
+                .flatMapMany(Flux::fromIterable)
+                .flatMap(report -> {
+                    String htmlBusinessPerformance = HtmlUtil.generateBusinessPerformanceHtml(
+                            report.getCount(),
+                            report.getTotalAmount(),
+                            report.getApplicationStatus()
+                    );
+
+                    Map<String, Object> payload = Map.of(
+                            "email", co.com.bancolombia.model.report.constants.Constants.ADMIN_EMAIL,
+                            "message", htmlBusinessPerformance
+                    );
+
+                    return notificationRepository.sendNotification(
+                            Notification.builder()
+                                    .payload(payload)
+                                    .queueKey("notifications")
+                                    .build()
+                    );
+                })
+                .then();
     }
 }

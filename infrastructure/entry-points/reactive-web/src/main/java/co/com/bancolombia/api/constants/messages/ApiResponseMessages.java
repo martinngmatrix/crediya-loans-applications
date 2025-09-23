@@ -8,4 +8,6 @@ public class ApiResponseMessages {
     public static final String REQUEST_RECEIVED_UPDATE_LOAN_APPLICATION_STATUS = "Inicio del proceso de actualizacion de solicitud de prestamo";
     public static final String REQUEST_RECEIVED_CALCULATE_DEBT_CAPACITY = "Inicio del proceso de calculo de capacidad de endeudamiento";
     public static final String REQUEST_CALCULATE_DEBT_PROCESSED_SUCCESSFULLY = "Solicitud procesada con exito";
+    public static final String REQUEST_RECEIVED_SEND_BUSINESS_PERFORMANCE_REPORT = "Inicio del proceso de envio de reporte de desempeño del negocio";
+    public static final String REQUEST_BUSINESS_PERFORMANCE_REPORT_PROCESSED_SUCCESSFULLY = "Reporte de desempeño del negocio enviado con exito";
 }

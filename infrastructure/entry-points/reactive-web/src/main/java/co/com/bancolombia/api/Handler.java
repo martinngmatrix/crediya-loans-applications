@@ -119,4 +119,17 @@ private static final Logger log = LoggerFactory.getLogger(Handler.class);
                     return ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue(error);
                 });
     }
+
+    public Mono<ServerResponse> sendBusinessPerformanceReport(ServerRequest serverRequest) {
+        log.trace(ApiResponseMessages.REQUEST_RECEIVED_SEND_BUSINESS_PERFORMANCE_REPORT);
+        return loanApplicationUseCase.sendBusinessPerformance()
+                .then(ServerResponse.status(HttpStatus.ACCEPTED).build())
+                .doOnSuccess(res -> log.info(ApiResponseMessages.REQUEST_BUSINESS_PERFORMANCE_REPORT_PROCESSED_SUCCESSFULLY))
+                .onErrorResume(e -> {
+                    ErrorResponse error = new ErrorResponse(
+                            e.getMessage() != null ? e.getMessage() : Constants.UNEXPECTED_ERROR
+                    );
+                    return ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue(error);
+                });
+    }
 }

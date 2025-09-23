@@ -63,4 +63,31 @@ class HtmlUtilTest {
         assertTrue(html.contains("Rechazado"));
         assertTrue(html.contains("Gracias por confiar en nosotros"));
     }
+
+    @Test
+    void testGenerateBusinessPerformanceHtml() {
+        BigInteger totalLoans = BigInteger.valueOf(10);
+        BigDecimal totalAmount = new BigDecimal("25000.50");
+        String status = "APPROVED";
+
+        String html = HtmlUtil.generateBusinessPerformanceHtml(totalLoans, totalAmount, status);
+
+        assertTrue(html.contains("Reporte de Desempeño del Negocio"));
+        assertTrue(html.contains("Estado analizado: <b>APPROVED</b>"));
+        assertTrue(html.contains("10"));
+        assertTrue(html.contains("25,000.50"));
+        assertTrue(html.contains("<table"));
+        assertTrue(html.contains("</table>"));
+    }
+
+    @Test
+    void testGenerateBusinessPerformanceHtmlWithNulls() {
+        String html = HtmlUtil.generateBusinessPerformanceHtml(null, null, "PENDING");
+
+        assertTrue(html.contains("Reporte de Desempeño del Negocio"));
+        assertTrue(html.contains("Estado analizado: <b>PENDING</b>"));
+        assertTrue(html.contains("0"));
+        assertTrue(html.contains("0.00"));
+    }
+
 }

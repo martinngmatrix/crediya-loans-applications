@@ -22,6 +22,8 @@ import co.com.bancolombia.model.loanapplication.gateways.LoanApplicationReposito
 import co.com.bancolombia.model.loans.Loan;
 import co.com.bancolombia.model.loans.gateways.LoanRepository;
 import co.com.bancolombia.model.notification.gateways.NotificationRepository;
+import co.com.bancolombia.model.report.Report;
+import co.com.bancolombia.model.report.gateways.ReportRepository;
 import co.com.bancolombia.model.user.User;
 import co.com.bancolombia.model.user.gateways.UserRepository;
 import reactor.core.publisher.Flux;
@@ -35,6 +37,7 @@ public class LoanApplicationUseCaseTest {
         private UserRepository userRepository;
         private LoanApplicationUseCase useCase;
         private NotificationRepository notificationRepository;
+        private ReportRepository reportRepository;
         String token = "example_token";
         int size = 1;
         int page = 1;
@@ -45,8 +48,9 @@ public class LoanApplicationUseCaseTest {
                 loanRepository = mock(LoanRepository.class);
                 userRepository = mock(UserRepository.class);
                 notificationRepository = mock(NotificationRepository.class);
+                reportRepository = mock(ReportRepository.class);
                 useCase = new LoanApplicationUseCase(repository, loanRepository, userRepository,
-                                notificationRepository);
+                                notificationRepository, reportRepository);
         }
 
         @Test
@@ -459,5 +463,57 @@ public class LoanApplicationUseCaseTest {
                 verify(repository).updateLoanApplicationStatus(debtCapacity.getLoanApplicationId(), debtCapacity.getResult());
                 verify(repository).getLoanApplicationById(debtCapacity.getLoanApplicationId());
                 verify(notificationRepository, times(2)).sendNotification(any());
+        }
+
+        @Test
+        void sendBusinessPerformanceSuccess() {
+        Report report = Report.builder()
+                .applicationStatus("APPROVED")
+                .totalAmount(BigDecimal.valueOf(10000))
+                .count(BigInteger.valueOf(5))
+                .build();
+
+        when(reportRepository.getEntityBySomeKeys(co.com.bancolombia.model.report.constants.Constants.APPROVED_STATUS))
+                .thenReturn(Mono.just(java.util.List.of(report)));
+        when(notificationRepository.sendNotification(any())).thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.sendBusinessPerformance())
+                .verifyComplete();
+
+        verify(reportRepository).getEntityBySomeKeys(co.com.bancolombia.model.report.constants.Constants.APPROVED_STATUS);
+        verify(notificationRepository).sendNotification(any());
+        }
+
+        @Test
+        void sendBusinessPerformanceEmptyReports() {
+        when(reportRepository.getEntityBySomeKeys(co.com.bancolombia.model.report.constants.Constants.APPROVED_STATUS))
+                .thenReturn(Mono.just(java.util.Collections.emptyList()));
+
+        StepVerifier.create(useCase.sendBusinessPerformance())
+                .verifyComplete();
+
+        verify(reportRepository).getEntityBySomeKeys(co.com.bancolombia.model.report.constants.Constants.APPROVED_STATUS);
+        verifyNoInteractions(notificationRepository);
+        }
+
+        @Test
+        void sendBusinessPerformanceNotificationError() {
+        Report report = Report.builder()
+                .applicationStatus("APPROVED")
+                .totalAmount(BigDecimal.valueOf(5000))
+                .count(BigInteger.ONE)
+                .build();
+
+        when(reportRepository.getEntityBySomeKeys(co.com.bancolombia.model.report.constants.Constants.APPROVED_STATUS))
+                .thenReturn(Mono.just(java.util.List.of(report)));
+        when(notificationRepository.sendNotification(any()))
+                .thenReturn(Mono.error(new RuntimeException("Notification failed")));
+
+        StepVerifier.create(useCase.sendBusinessPerformance())
+                .expectErrorMatches(err -> err.getMessage().equals("Notification failed"))
+                .verify();
+
+        verify(reportRepository).getEntityBySomeKeys(co.com.bancolombia.model.report.constants.Constants.APPROVED_STATUS);
+        verify(notificationRepository).sendNotification(any());
         }
 }

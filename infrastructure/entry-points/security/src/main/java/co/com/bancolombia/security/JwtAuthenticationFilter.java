@@ -39,7 +39,8 @@ public class JwtAuthenticationFilter implements WebFilter {
                 "/actuator/health/",
                 "/actuator/health",
                 "/health/",
-                "/health"
+                "/health",
+                "/api/v1/rendimiento"
         );
         String path = exchange.getRequest().getPath().value();
 

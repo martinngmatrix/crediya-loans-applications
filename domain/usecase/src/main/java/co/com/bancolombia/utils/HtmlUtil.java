@@ -1,5 +1,6 @@
 package co.com.bancolombia.utils;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import co.com.bancolombia.model.debtcapacity.DebtCapacity;
@@ -55,6 +56,36 @@ public class HtmlUtil {
           .append("</b></p>");
 
         sb.append("<br><p>Gracias por confiar en nosotros.</p>");
+        sb.append("</body></html>");
+
+        return sb.toString();
+    }
+
+    public static String generateBusinessPerformanceHtml(BigInteger totalLoans, BigDecimal totalAmount, String status) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("<html><body style='font-family: Arial, sans-serif;'>");
+        sb.append("<h2 style='color:#2E86C1;'>Reporte de Desempeño del Negocio</h2>");
+
+        sb.append("<p>Estado analizado: <b>").append(status).append("</b></p>");
+
+        sb.append("<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse; margin-top:10px;'>");
+        sb.append("<tr style='background-color:#f2f2f2;'>")
+        .append("<th>Total de Solicitudes</th>")
+        .append("<th>Monto Total</th>")
+        .append("</tr>");
+
+        sb.append("<tr>")
+        .append("<td align='center'>").append(totalLoans != null ? totalLoans : 0).append("</td>")
+        .append("<td align='center'>").append(totalAmount != null ? String.format("%,.2f", totalAmount) : "0.00").append("</td>")
+        .append("</tr>");
+
+        sb.append("</table>");
+
+        sb.append("<br><p>Este reporte refleja el desempeño actual de las solicitudes con estado <b>")
+        .append(status)
+        .append("</b>.</p>");
+
         sb.append("</body></html>");
 
         return sb.toString();

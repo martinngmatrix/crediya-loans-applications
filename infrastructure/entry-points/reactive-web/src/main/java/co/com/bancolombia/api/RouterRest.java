@@ -150,6 +150,7 @@ public class RouterRest {
         return route(POST("/api/v1/solicitud"), handler::createLoanApplication)
             .andRoute(GET("/api/v1/solicitud"), handler::listLoanApplication)
             .andRoute(PUT("/api/v1/solicitud"), handler::updateLoanApplicationStatus)
-            .andRoute(POST("/api/v1/calcular-capacidad"), handler::calculateDebtCapacity);
+            .andRoute(POST("/api/v1/calcular-capacidad"), handler::calculateDebtCapacity)
+            .andRoute(POST("/api/v1/rendimiento"), handler::sendBusinessPerformanceReport);
     }
 }
